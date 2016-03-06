@@ -57,7 +57,6 @@ func (r Resource) GetResource(db sqlx.DB, resource_id int) Resource {
   err := db.Get(&resource, query)
   if err != nil {
     glog.Errorf("Error retrieving resource: %d", err)
-    return nil
   }
   return resource
 }
