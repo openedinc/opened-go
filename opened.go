@@ -1,3 +1,4 @@
+// Package opened provides structures for OpenEd objects such as Resources and Standards
 package opened
 
 import (
@@ -7,6 +8,7 @@ import (
   "github.com/jmoiron/sqlx"
 )
 
+// A Resource has information such as Publisher, Title, Description for video, game or assessment
 type Resource struct {
   Id               int
   Title            string
@@ -18,6 +20,8 @@ type Resource struct {
   Youtube_id       string
 }
 
+// ResourcesShareStandard tests if a supplied resources shares a standard with the
+// resource that is the resource.  Returns true if they share standards
 func (resource1 Resource) ResourcesShareStandard(db sqlx.DB, resource2 Resource) bool {
   query_base := "SELECT standard_id FROM alignments WHERE resource_id="
   query1 := query_base + strconv.Itoa(resource1.Id)
@@ -46,26 +50,31 @@ func (resource1 Resource) ResourcesShareStandard(db sqlx.DB, resource2 Resource)
   return false
 }
 
+// GetResource fills a Resource structure with the values given the OpenEd resource_id
 func (r Resource) GetResource(db sqlx.DB, resource_id int) Resource {
   query := "SELECT FROM resources WHERE id=" + strconv.Itoa(resource_id)
   resource := Resource{}
   err := db.Get(&resource, query)
   if err != nil {
     glog.Errorf("Error retrieving resource: %d", err)
+    return nil
   }
   return resource
 }
 
+// GetAlignments retrieves all standard alignments for a given resource
 func (r Resource) GetAlignments(db sqlx.DB, resource_id int) []int {
   query := "SELECT standard_id FROM alignments WHERE resource_id=" + strconv.Itoa(resource_id)
   standards := []int{}
   err := db.Select(&standards, query)
   if err != nil {
     glog.Errorf("Error retrieving standards: %d", err)
+    return nil
   }
   return standards
 }
 
+// An AssessmentRun has selected important information stored in OpenEd AssessmentRuns table.
 type AssessmentRun struct {
   Assessment_id int
   Id            int
@@ -75,6 +84,7 @@ type AssessmentRun struct {
   Finished_at   time.Time
 }
 
+// A UserEvent has information on the user and what action they performed.
 type UserEvent struct {
   Id                 int
   User_id            int
@@ -85,6 +95,7 @@ type UserEvent struct {
   Url                string
 }
 
+// An Alignment has information on resource and what standard its aligned to
 type Alignment struct {
   Id          int
   Resource_id int
