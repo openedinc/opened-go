@@ -62,8 +62,8 @@ func (r Resource) GetResource(db sqlx.DB, resource_id int) Resource {
 }
 
 // GetAlignments retrieves all standard alignments for a given resource
-func (r Resource) GetAlignments(db sqlx.DB, resource_id int) []int {
-  query := "SELECT standard_id FROM alignments WHERE resource_id=" + strconv.Itoa(resource_id)
+func (r Resource) GetAlignments(db sqlx.DB) []int {
+  query := "SELECT standard_id FROM alignments WHERE resource_id=" + strconv.Itoa(r.Id)
   standards := []int{}
   err := db.Select(&standards, query)
   if err != nil {
