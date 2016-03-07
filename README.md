@@ -2,8 +2,7 @@
 --
     import "github.com/openedinc/opened"
 
-Package opened provides structures for OpenEd objects such as Resources and
-### Standards
+Package opened provides structures for OpenEd objects such as Resources and Standards
 
 ## Usage
 
