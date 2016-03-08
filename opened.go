@@ -93,14 +93,13 @@ func (resource1 Resource) ResourcesShareCategory(db sqlx.DB, resource2 Resource)
 
 
 // GetResource fills a Resource structure with the values given the OpenEd resource_id
-func (r Resource) GetResource(db sqlx.DB) Resource {
+func (r *Resource) GetResource(db sqlx.DB) error {
   query := "SELECT FROM resources WHERE id=" + strconv.Itoa(r.Id)
-  resource := Resource{}
-  err := db.Get(&resource, query)
+  err := db.Get(r, query)
   if err != nil {
-    glog.Errorf("Error retrieving resource: %d", err)
+    glog.Errorf("Error retrieving resource: %v", err)
   }
-  return resource
+  return err
 }
 
 // GetAlignments retrieves all standard alignments for a given resource
