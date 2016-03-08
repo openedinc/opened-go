@@ -127,11 +127,11 @@ func (resource1 Resource) ResourcesShareSubject(db sqlx.DB, resource2 Resource) 
 
 // GetResource fills a Resource structure with the values given the OpenEd resource_id
 func (r *Resource) GetResource(db sqlx.DB) error {
-  query := "SELECT * FROM resources WHERE id=" + strconv.Itoa(r.Id) + " LIMIT 1"
+  query := "SELECT Id,Title,Url,PublisherId,ContributionId,Description,ResourceTypeId,YoutubeId FROM resources WHERE id=" + strconv.Itoa(r.Id) + " LIMIT 1"
   glog.V(3).Infof("Querying with: %s",query)
   err := db.Get(r, query)
   if err != nil {
-    glog.Errorf("Error retrieving resource: %v", err)
+    glog.Errorf("Error retrieving resource: %+v", err)
     return err
   }
   return nil
