@@ -14,11 +14,11 @@ type Resource struct {
   Id               int
   Title            string
   Url              string
-  Publisher_id     int
-  Contribution_id  int
+  PublisherId     int
+  ContributionId  int
   Description      string
-  Resource_type_id int
-  Youtube_id       string
+  ResourceTypeId int
+  YoutubeId       string
 }
 
 // ResourcesShareStandard tests if a supplied resources shares a standard with the
@@ -93,8 +93,8 @@ func (resource1 Resource) ResourcesShareCategory(db sqlx.DB, resource2 Resource)
 
 
 // GetResource fills a Resource structure with the values given the OpenEd resource_id
-func (r Resource) GetResource(db sqlx.DB, resource_id int) Resource {
-  query := "SELECT FROM resources WHERE id=" + strconv.Itoa(resource_id)
+func (r Resource) GetResource(db sqlx.DB) Resource {
+  query := "SELECT FROM resources WHERE id=" + strconv.Itoa(r.Id)
   resource := Resource{}
   err := db.Get(&resource, query)
   if err != nil {
