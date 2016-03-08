@@ -70,7 +70,9 @@ func (resource1 Resource) ResourcesShareCategory(db sqlx.DB, resource2 Resource)
       return false
     } else {
       for i := range categories1 {
+        glog.V(3).Infof("First category: %d",i) 
         for x := range categories2 {
+          glog.V(3).Infof("Second category: %d",x) 
           if i == x {
             glog.V(3).Infof("Resources share category: %d",i)
             return true
