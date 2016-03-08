@@ -42,12 +42,14 @@ func (resource1 Resource) ResourcesShareStandard(db sqlx.DB, resource2 Resource)
       for _,i := range standards1 {
         for _,x := range standards2 {
           if i == x {
+            glog.V(2).Infof("Resources do share standard")
             return true
           }
         }
       }
     }
   }
+  glog.V(2).Infof("Resources do not share standard")
   return false
 }
 
