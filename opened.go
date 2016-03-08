@@ -56,7 +56,6 @@ func (resource1 Resource) ResourcesShareStandard(db sqlx.DB, resource2 Resource)
 // ResourcesShareCategory tests if a supplied resources shares a standard category with the
 // resource used.  Returns true if they share category
 func (resource1 Resource) ResourcesShareCategory(db sqlx.DB, resource2 Resource) bool {
-
   query_base := "SELECT DISTINCT(category_id) FROM alignments INNER JOIN standards ON standards.id=alignments.standard_id AND resource_id="
   query1 := query_base + strconv.Itoa(resource1.Id) 
   categories1 := []int{}
@@ -91,6 +90,40 @@ func (resource1 Resource) ResourcesShareCategory(db sqlx.DB, resource2 Resource)
   return false
 }
 
+func (resource1 Resource) ResourcesShareSubject(db sqlx.DB, resource2 Resource) bool {
+  query_base := "SELECT subject_id FROM resources_subjects WHERE resources_subjects.resource_id="
+  query1 := query_base + strconv.Itoa(resource1.Id) 
+  subjects1 := []int{}
+  glog.V(3).Infof("Querying subjects for %d: %s",resource1.Id,query1)
+  err := db.Select(&categories1, query1)
+  if err != nil {
+    glog.Errorf("Couldn't retrieve subjects for %d:%+v ",resource1.Id,err)
+    return false
+  } else {
+    glog.V(3).Infof("Retrieved subjects: %+v",subjects1)
+    query2 := query_base + strconv.Itoa(resource2.Id)
+    categories2 := []int{}
+    glog.V(3).Infof("Querying subjects for %d: %s",resource2.Id,query2)
+    err = db.Select(&subjects2, query2)
+    if err != nil {
+      glog.Errorf("Couldn't retrieve categories for %d ", resource2.Id)
+      return false
+    } else {
+      for _,i := range subjects1 {
+        glog.V(3).Infof("First resource subjects: %d",i) 
+        for _,x := range subjects2 {
+          glog.V(3).Infof("Second resource subjects: %d",x) 
+          if i == x {
+            glog.V(2).Infof("Resources %d,%d share category: %d",resource1.Id,resource2.Id,i)
+            return true
+          }
+        }
+      }
+    }
+  }
+  glog.V(3).Infof("Resources do not share category")
+  return false
+}
 
 // GetResource fills a Resource structure with the values given the OpenEd resource_id
 func (r *Resource) GetResource(db sqlx.DB) error {
