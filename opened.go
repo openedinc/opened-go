@@ -6,6 +6,7 @@ import (
   "time"
   "github.com/golang/glog"
   "github.com/jmoiron/sqlx"
+  _ "github.com/lib/pq"
 )
 
 // A Resource has information such as Publisher, Title, Description for video, game or assessment
@@ -38,8 +39,8 @@ func (resource1 Resource) ResourcesShareStandard(db sqlx.DB, resource2 Resource)
       glog.Errorf("Couldn't retrieve standards for %d ", resource2.Id)
       return false
     } else {
-      for i := range standards1 {
-        for x := range standards2 {
+      for _,i := range standards1 {
+        for _,x := range standards2 {
           if i == x {
             return true
           }
@@ -54,24 +55,27 @@ func (resource1 Resource) ResourcesShareStandard(db sqlx.DB, resource2 Resource)
 // resource used.  Returns true if they share category
 func (resource1 Resource) ResourcesShareCategory(db sqlx.DB, resource2 Resource) bool {
 
-  query_base := "SELECT category_id FROM alignments,standards WHERE standards.id=alignments.standard_id AND resource_id="
-  query1 := query_base + strconv.Itoa(resource1.Id)
+  query_base := "SELECT DISTINCT(category_id) FROM alignments INNER JOIN standards ON standards.id=alignments.standard_id AND resource_id="
+  query1 := query_base + strconv.Itoa(resource1.Id) 
   categories1 := []int{}
+  glog.V(2).Infof("Querying categories for %d: %s",resource1.Id,query1)
   err := db.Select(&categories1, query1)
   if err != nil {
-    glog.Errorf("Couldn't retrieve categories for %d ",resource1.Id)
+    glog.Errorf("Couldn't retrieve categories for %d:%+v ",resource1.Id,err)
     return false
   } else {
+    glog.V(2).Infof("Retrieved categories: %+v",categories1)
     query2 := query_base + strconv.Itoa(resource2.Id)
     categories2 := []int{}
+    glog.V(2).Infof("Querying categories for %d: %s",resource2.Id,query2)
     err = db.Select(&categories2, query2)
     if err != nil {
       glog.Errorf("Couldn't retrieve categories for %d ", resource2.Id)
       return false
     } else {
-      for i := range categories1 {
+      for _,i := range categories1 {
         glog.V(3).Infof("First category: %d",i) 
-        for x := range categories2 {
+        for _,x := range categories2 {
           glog.V(3).Infof("Second category: %d",x) 
           if i == x {
             glog.V(3).Infof("Resources share category: %d",i)
@@ -99,7 +103,7 @@ func (r Resource) GetResource(db sqlx.DB, resource_id int) Resource {
 
 // GetAlignments retrieves all standard alignments for a given resource
 func (r Resource) GetAlignments(db sqlx.DB) []int {
-  query := "SELECT standard_id FROM alignments WHERE resource_id=" + strconv.Itoa(r.Id)
+  query := "SELECT standard_id FROM alignments WHERE resource_id=" + strconv.Itoa(r.Id) 
   standards := []int{}
   err := db.Select(&standards, query)
   if err != nil {
