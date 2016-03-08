@@ -95,14 +95,14 @@ func (resource1 Resource) ResourcesShareSubject(db sqlx.DB, resource2 Resource) 
   query1 := query_base + strconv.Itoa(resource1.Id) 
   subjects1 := []int{}
   glog.V(3).Infof("Querying subjects for %d: %s",resource1.Id,query1)
-  err := db.Select(&categories1, query1)
+  err := db.Select(&subjects1, query1)
   if err != nil {
     glog.Errorf("Couldn't retrieve subjects for %d:%+v ",resource1.Id,err)
     return false
   } else {
     glog.V(3).Infof("Retrieved subjects: %+v",subjects1)
     query2 := query_base + strconv.Itoa(resource2.Id)
-    categories2 := []int{}
+    subjects2 := []int{}
     glog.V(3).Infof("Querying subjects for %d: %s",resource2.Id,query2)
     err = db.Select(&subjects2, query2)
     if err != nil {
