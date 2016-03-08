@@ -21,7 +21,7 @@ type Resource struct {
 }
 
 // ResourcesShareStandard tests if a supplied resources shares a standard with the
-// resource that is the resource.  Returns true if they share standards
+// resource used.  Returns true if they share standards
 func (resource1 Resource) ResourcesShareStandard(db sqlx.DB, resource2 Resource) bool {
   query_base := "SELECT standard_id FROM alignments WHERE resource_id="
   query1 := query_base + strconv.Itoa(resource1.Id)
@@ -49,6 +49,40 @@ func (resource1 Resource) ResourcesShareStandard(db sqlx.DB, resource2 Resource)
   }
   return false
 }
+
+// ResourcesShareCategory tests if a supplied resources shares a standard category with the
+// resource used.  Returns true if they share category
+func (resource1 Resource) ResourcesShareCategory(db sqlx.DB, resource2 Resource) bool {
+
+  query_base := "SELECT category_id FROM alignments,standards WHERE standards.id=alignments.standard_id AND resource_id="
+  query1 := query_base + strconv.Itoa(resource1.Id)
+  categories1 := []int{}
+  err := db.Select(&categories1, query1)
+  if err != nil {
+    glog.Errorf("Couldn't retrieve categories for %d ",resource1.Id)
+    return false
+  } else {
+    query2 := query_base + strconv.Itoa(resource2.Id)
+    categories2 := []int{}
+    err = db.Select(&categories2, query2)
+    if err != nil {
+      glog.Errorf("Couldn't retrieve categories for %d ", resource2.Id)
+      return false
+    } else {
+      for i := range categories1 {
+        for x := range categories2 {
+          if i == x {
+            glog.V(3).Infof("Resources share category: %d",i)
+            return true
+          }
+        }
+      }
+    }
+  }
+  glog.V(3).Infof("Resourcesdo not share category: %d",i)
+  return false
+}
+
 
 // GetResource fills a Resource structure with the values given the OpenEd resource_id
 func (r Resource) GetResource(db sqlx.DB, resource_id int) Resource {
