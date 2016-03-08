@@ -58,16 +58,16 @@ func (resource1 Resource) ResourcesShareCategory(db sqlx.DB, resource2 Resource)
   query_base := "SELECT DISTINCT(category_id) FROM alignments INNER JOIN standards ON standards.id=alignments.standard_id AND resource_id="
   query1 := query_base + strconv.Itoa(resource1.Id) 
   categories1 := []int{}
-  glog.V(2).Infof("Querying categories for %d: %s",resource1.Id,query1)
+  glog.V(3).Infof("Querying categories for %d: %s",resource1.Id,query1)
   err := db.Select(&categories1, query1)
   if err != nil {
     glog.Errorf("Couldn't retrieve categories for %d:%+v ",resource1.Id,err)
     return false
   } else {
-    glog.V(2).Infof("Retrieved categories: %+v",categories1)
+    glog.V(3).Infof("Retrieved categories: %+v",categories1)
     query2 := query_base + strconv.Itoa(resource2.Id)
     categories2 := []int{}
-    glog.V(2).Infof("Querying categories for %d: %s",resource2.Id,query2)
+    glog.V(3).Infof("Querying categories for %d: %s",resource2.Id,query2)
     err = db.Select(&categories2, query2)
     if err != nil {
       glog.Errorf("Couldn't retrieve categories for %d ", resource2.Id)
@@ -78,14 +78,14 @@ func (resource1 Resource) ResourcesShareCategory(db sqlx.DB, resource2 Resource)
         for _,x := range categories2 {
           glog.V(3).Infof("Second category: %d",x) 
           if i == x {
-            glog.V(3).Infof("Resources share category: %d",i)
+            glog.V(2).Infof("Resources share category: %d",i)
             return true
           }
         }
       }
     }
   }
-  glog.V(3).Infof("Resources do not share category")
+  glog.V(2).Infof("Resources do not share category")
   return false
 }
 
