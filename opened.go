@@ -79,7 +79,7 @@ func (resource1 Resource) ResourcesShareCategory(db sqlx.DB, resource2 Resource)
       }
     }
   }
-  glog.V(3).Infof("Resourcesdo not share category: %d",i)
+  glog.V(3).Infof("Resources do not share category")
   return false
 }
 
