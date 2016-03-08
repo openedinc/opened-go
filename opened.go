@@ -42,14 +42,14 @@ func (resource1 Resource) ResourcesShareStandard(db sqlx.DB, resource2 Resource)
       for _,i := range standards1 {
         for _,x := range standards2 {
           if i == x {
-            glog.V(2).Infof("Resources do share standard")
+            glog.V(2).Infof("Resources %d,%d do share standard %d",resource1.Id,resource2.Id,i)
             return true
           }
         }
       }
     }
   }
-  glog.V(2).Infof("Resources do not share standard")
+  glog.V(3).Infof("Resources do not share standard")
   return false
 }
 
@@ -80,14 +80,14 @@ func (resource1 Resource) ResourcesShareCategory(db sqlx.DB, resource2 Resource)
         for _,x := range categories2 {
           glog.V(3).Infof("Second category: %d",x) 
           if i == x {
-            glog.V(2).Infof("Resources share category: %d",i)
+            glog.V(2).Infof("Resources %d,%d share category: %d",resource1.Id,resource2.Id,i)
             return true
           }
         }
       }
     }
   }
-  glog.V(2).Infof("Resources do not share category")
+  glog.V(3).Infof("Resources do not share category")
   return false
 }
 
