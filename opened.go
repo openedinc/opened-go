@@ -5,6 +5,7 @@ import (
   "strconv"
   "time"
   "github.com/golang/glog"
+  "database/sql"
   "github.com/jmoiron/sqlx"
   _ "github.com/lib/pq"
 )
@@ -12,18 +13,18 @@ import (
 // A Resource has information such as Publisher, Title, Description for video, game or assessment
 type Resource struct {
   Id               int
-  Title            string
-  Url              string
-  Publisher_id    int
-  Contribution_id int
-  Description      string
-  Resource_type_id int
-  Youtube_Id       string
+  Title            sql.NullString
+  Url              sql.NullString
+  Publisher_id     sql.NullInt64
+  Contribution_id  sql.NullInt64
+  Description      sql.NullString
+  Resource_type_id sql.NullInt64
+  Youtube_id       sql.NullString
 }
 
 // GetResource fills a Resource structure with the values given the OpenEd resource_id
 func (r *Resource) GetResource(db sqlx.DB) error {
-  query := "SELECT Id,Title,Publisher_id,Contribution_id,Description,Resource_type_id FROM resources WHERE id=" + strconv.Itoa(r.Id) 
+  query := "SELECT Id,Title,Publisher_id,Contribution_id,Description,Resource_type_id,Youtube_id FROM resources WHERE id=" + strconv.Itoa(r.Id) 
   glog.V(3).Infof("Querying with: %s",query)
   err := db.Get(r, query)
   if err != nil {
