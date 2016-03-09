@@ -30,6 +30,8 @@ func (r *Resource) GetResource(db sqlx.DB) error {
   if err != nil {
     glog.Errorf("Error retrieving resource: %+v", err)
     return err
+  } else {
+    glog.V(3).Infof("Resource is: %+v",*r)
   }
   return nil
 }
