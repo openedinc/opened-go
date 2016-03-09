@@ -23,7 +23,7 @@ type Resource struct {
 
 // GetResource fills a Resource structure with the values given the OpenEd resource_id
 func (r *Resource) GetResource(db sqlx.DB) error {
-  query := "SELECT Id,Title,Url,publisher_id,contribution_id,Description,Resource_type_id,youtube_id FROM resources WHERE id=" + strconv.Itoa(r.Id) + " LIMIT 1"
+  query := "SELECT Id,Title,Url,publisher_id,contribution_id,Description,Resource_type_id,youtube_id FROM resources WHERE id=" + strconv.Itoa(r.Id) 
   glog.V(3).Infof("Querying with: %s",query)
   err := db.Get(r, query)
   if err != nil {
