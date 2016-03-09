@@ -8,6 +8,18 @@ import (
   "github.com/jmoiron/sqlx"
 )
 
+func TestGetResource(t *testing.T) {
+  db := setup()
+  r:=Resource{Id:183189}
+  rp:=&r
+  err:=rp.GetResource(*db)
+  
+  if err!=nil {
+    t.Errorf("Failed to get resource: %+v",err)
+  }
+  glog.V(1).Infof("Got resource: %+v",r)
+  teardown(db)
+}
 
 func TestResourcesShareStandard(t *testing.T) {
   db := setup()
@@ -15,7 +27,7 @@ func TestResourcesShareStandard(t *testing.T) {
   r1:=Resource{Id:183189}
   r2:=Resource{Id:2043501}
   if r1.ResourcesShareStandard(*db,r2)==true {
-    // bad erro!
+    // bad error!
     t.Errorf("Resources %d and %d share standard!",r1.Id,r2.Id)
   } else {
     glog.V(2).Infof("Resources %d and %d do not share standard!",r1.Id,r2.Id)
