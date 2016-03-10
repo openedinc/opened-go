@@ -140,6 +140,64 @@ func (resource1 Resource) ResourcesShareSubject(db sqlx.DB, resource2 Resource) 
   return false
 }
 
+type User struct {
+  Id sql.NullInt64
+  Email sql.NullString
+  Username sql.NullString 
+  Role sql.NullString
+  District_state sql.NullString 
+  Provider sql.NullString
+  Grades_range sql.NullString
+}
+
+// ListUsers retrieves all users with assessments
+func ListUsers(db sqlx.DB) ([]User,error) {
+  // retrieve only users with assessment runs
+  query := "SELECT distinct(users.id),email,username,role,district_state,provider,grades_range FROM users INNER JOIN assessment_runs ON (users.id=assessment_runs.user_id)" 
+  users:= []User{}
+  err := db.Select(&users, query)
+  if err != nil {
+    glog.Errorf("Error retrieving users: %d", err)
+    return nil,err
+  } else {
+    glog.Infof("Retrieved %d users",len(users))    
+  }
+  return users,err
+}
+
+// An AssessmentRun has selected important information stored in OpenEd AssessmentRuns table.
+type AssessmentRun struct {
+  Id            int
+  User_id       int
+  Finished_at   time.Time
+  Assessment_id int
+  Score         float32
+  First_run     bool
+}
+
+func ListAssessmentRuns(db sqlx.DB) ([]AssessmentRun,error) {
+  // retrieve only users with assessment runs
+  query := "SELECT distinct(id),user_id,finished_at,assessment_id,score,first_run FROM assessment_runs WHERE finished_at is not null and score>0" 
+  runs:= []AssessmentRun{}
+  err := db.Select(&runs, query)
+  if err != nil {
+    glog.Errorf("Error retrieving run: %d", err)
+    return nil,err
+  } else {
+    glog.Infof("Retrieved %d runs",len(runs))    
+  }
+  return runs,err
+}
+
+
+// An Alignment has information on resource and what standard its aligned to
+type Alignment struct {
+  Id          int
+  Resource_id int
+  Standard_id int
+  Status      int
+}
+
 // GetAlignments retrieves all standard alignments for a given resource
 func (r Resource) GetAlignments(db sqlx.DB) []int {
   query := "SELECT standard_id FROM alignments WHERE resource_id=" + strconv.Itoa(r.Id) 
@@ -152,15 +210,7 @@ func (r Resource) GetAlignments(db sqlx.DB) []int {
   return standards
 }
 
-// An AssessmentRun has selected important information stored in OpenEd AssessmentRuns table.
-type AssessmentRun struct {
-  Assessment_id int
-  Id            int
-  User_id       int
-  Score         float32
-  First_run     bool
-  Finished_at   time.Time
-}
+
 
 // A UserEvent has information on the user and what action they performed.
 type UserEvent struct {
@@ -173,13 +223,6 @@ type UserEvent struct {
   Url                string
 }
 
-// An Alignment has information on resource and what standard its aligned to
-type Alignment struct {
-  Id          int
-  Resource_id int
-  Standard_id int
-  Status      int
-}
 
 
 

@@ -8,12 +8,32 @@ import (
   "github.com/jmoiron/sqlx"
 )
 
+func TestListAssessmentRuns(t *testing.T) {
+  db:=setup()
+  runs,err:=ListAssessmentRuns(*db)
+  if err!=nil {
+    t.Errorf("Failed to get runs: %+v",err)
+  }
+  glog.V(1).Infof("Got %d runs",len(runs))
+  teardown(db)  
+}
+
+func TestListUsers(t *testing.T) {
+  db:=setup()
+  users,err:=ListUsers(*db)
+  if err!=nil {
+    t.Errorf("Failed to get users: %+v",err)
+  }
+  glog.V(1).Infof("Got %d users",len(users))
+  teardown(db)  
+}
+
 func TestGetResource(t *testing.T) {
   db := setup()
   r:=Resource{Id:183189}
   rp:=&r
   err:=rp.GetResource(*db)
-  
+
   if err!=nil {
     t.Errorf("Failed to get resource: %+v",err)
   }
