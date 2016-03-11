@@ -8,6 +8,23 @@ import (
   "github.com/jmoiron/sqlx"
 )
 
+func TestGetToken(t *testing.T) {
+  flag.Set("alsologtostderr", "true")
+  flag.Set("v","3")
+  client_id:=os.Getenv("CLIENT_ID")
+  client_secret:=os.Getenv("CLIENT_SECRET")
+  username:=os.Getenv("USERNAME")
+  url:=os.Getenv("PARTNER_BASE_URI")+"/1/oauth/get_token"
+  glog.V(1).Infof("Getting token for %s",client_id)
+  glog.V(1).Infof("To URL %s",url)
+  token,err:=GetToken(client_id,client_secret,username,url)
+  if err!=nil {
+    t.Errorf("Failed to get token: %+v",err)
+  } else {
+    glog.V(1).Infof("Got token %s",token) 
+  }
+}
+
 func TestListAssessmentRuns(t *testing.T) {
   db:=setup()
   runs,err:=ListAssessmentRuns(*db)

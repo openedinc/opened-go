@@ -8,7 +8,28 @@ import (
   "database/sql"
   "github.com/jmoiron/sqlx"
   _ "github.com/lib/pq"
+  "net/http"
+  "net/url"
+  "io/ioutil"
 )
+
+func GetToken(client_id string,secret string,username string,uri string) ([]byte,error)  {
+  v := url.Values{}
+  v.Set("client_id", client_id)
+  v.Set("client_secret", secret)
+  v.Set("username", username)
+  resp,err := http.PostForm(uri,v)
+  defer resp.Body.Close()
+  token, err := ioutil.ReadAll(resp.Body)
+  return token,err
+}
+
+func ListResources(token string,db sqlx.DB) ([]Resource,error) {
+  resources :=[]Resource{}
+  var err error
+  return resources,err
+}
+
 
 // A Resource has information such as Publisher, Title, Description for video, game or assessment
 type Resource struct {
