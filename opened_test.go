@@ -8,16 +8,32 @@ import (
   "github.com/jmoiron/sqlx"
 )
 
+func TestSearchResources(t *testing.T) {
+  token,_:=setup_ws()
+  query_params:=make(map[string]string)
+  query_params["descriptive"]="counting"
+  query_params["grades_range"]="K-1"
+  results,err:=SearchResources(query_params,token)
+  if err!=nil {
+    t.Errorf("Error from SearchResources",err)    
+  }
+  if len(results)==0 {
+    t.Errorf("No resources returned!")
+  }
+}
+
+// setup_ws sets up test for OpenEd package calls which use web services (instead of database)
+func setup_ws() (string,error) { 
+  flag.Set("alsologtostderr", "true")
+  flag.Set("v","3")
+  token,err:=GetToken("","","","")
+  return token,err
+}
+
 func TestGetToken(t *testing.T) {
   flag.Set("alsologtostderr", "true")
   flag.Set("v","3")
-  client_id:=os.Getenv("CLIENT_ID")
-  client_secret:=os.Getenv("CLIENT_SECRET")
-  username:=os.Getenv("USERNAME")
-  url:=os.Getenv("PARTNER_BASE_URI")+"/1/oauth/get_token"
-  glog.V(1).Infof("Getting token for %s",client_id)
-  glog.V(1).Infof("To URL %s",url)
-  token,err:=GetToken(client_id,client_secret,username,url)
+  token,err:=GetToken("","","","")
   if err!=nil {
     t.Errorf("Failed to get token: %+v",err)
   } else {

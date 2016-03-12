@@ -11,24 +11,9 @@ import (
   "net/http"
   "net/url"
   "io/ioutil"
+  "os"
+  "encoding/json"
 )
-
-func GetToken(client_id string,secret string,username string,uri string) ([]byte,error)  {
-  v := url.Values{}
-  v.Set("client_id", client_id)
-  v.Set("client_secret", secret)
-  v.Set("username", username)
-  resp,err := http.PostForm(uri,v)
-  defer resp.Body.Close()
-  token, err := ioutil.ReadAll(resp.Body)
-  return token,err
-}
-
-func ListResources(token string,db sqlx.DB) ([]Resource,error) {
-  resources :=[]Resource{}
-  var err error
-  return resources,err
-}
 
 
 // A Resource has information such as Publisher, Title, Description for video, game or assessment
@@ -42,6 +27,67 @@ type Resource struct {
   Resource_type_id sql.NullInt64
   Youtube_id       sql.NullString
 }
+
+func SearchResources(query_params map[string]string,token string) ([]Resource,error) {
+  var err error
+  uri:=os.Getenv("PARTNER_BASE_URI")+"/1/resources.json"
+  u, err := url.Parse(uri)
+  if err != nil {
+    glog.Fatal(err)
+  }
+  q:=u.Query()
+  for key,value:= range query_params {  
+    glog.V(2).Infof("Setting %s to %s",key,value)
+    q.Set(key,value)
+  }
+  u.RawQuery = q.Encode()
+  uri=u.String()
+  glog.V(2).Infof("Hitting uri %s",uri)
+  h := &http.Header{}
+  h.Set("Content-Type", "application/json")
+  auth:="Bearer "+string(token)
+  glog.V(3).Infof("Authorization header: %s",auth)
+  h.Set("Authorization",auth)
+  res, err := http.Get(uri)
+  if err != nil {
+    glog.Fatal(err)
+  }
+  body, err := ioutil.ReadAll(res.Body)
+  var data []Resource
+  glog.V(2).Infof("Returned %+v",data)
+  json.Unmarshal(body,&data)
+  return data,err
+}
+
+func GetToken(client_id string,secret string,username string,uri string) (string,error)  {
+  v := url.Values{}
+  if client_id=="" {
+    client_id=os.Getenv("CLIENT_ID")
+  }
+  v.Set("client_id", client_id)
+  if secret=="" {
+    secret=os.Getenv("CLIENT_SECRET")
+  }
+  v.Set("secret", secret)
+  if username=="" {
+    username=os.Getenv("USERNAME")
+  }
+  v.Set("username", username)
+  if uri=="" {
+    uri=os.Getenv("PARTNER_BASE_URI")+"/1/oauth/get_token"
+  }
+  glog.V(1).Infof("Getting token for %s",client_id)
+  glog.V(1).Infof("To URL %s",uri)
+  resp,err := http.PostForm(uri,v)
+  defer resp.Body.Close()
+  body, err := ioutil.ReadAll(resp.Body)
+  var data map[string]string
+  json.Unmarshal(body,&data)
+  token:=data["access_token"]
+  return token,err
+}
+
+
 
 // GetResource fills a Resource structure with the values given the OpenEd resource_id
 func (r *Resource) GetResource(db sqlx.DB) error {
