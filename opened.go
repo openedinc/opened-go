@@ -13,8 +13,19 @@ import (
   "io/ioutil"
   "os"
   "encoding/json"
+  "github.com/jmcvetta/napping"
 )
 
+type WsResource struct {
+  Id               int
+  Title            string
+  Url              string
+  Publisher_id     int
+  Contribution_id  int
+  Description      string
+  Resource_type_id int
+  Youtube_id       string
+}
 
 // A Resource has information such as Publisher, Title, Description for video, game or assessment
 type Resource struct {
@@ -28,35 +39,31 @@ type Resource struct {
   Youtube_id       sql.NullString
 }
 
-func SearchResources(query_params map[string]string,token string) ([]Resource,error) {
+type Result struct {
+    Resources []WsResource
+}
+
+func SearchResources(query_params map[string]string,token string) (Result,error) {
   var err error
   uri:=os.Getenv("PARTNER_BASE_URI")+"/1/resources.json"
-  u, err := url.Parse(uri)
-  if err != nil {
-    glog.Fatal(err)
-  }
-  q:=u.Query()
-  for key,value:= range query_params {  
-    glog.V(2).Infof("Setting %s to %s",key,value)
-    q.Set(key,value)
-  }
-  u.RawQuery = q.Encode()
-  uri=u.String()
-  glog.V(2).Infof("Hitting uri %s",uri)
+  s := napping.Session{}
   h := &http.Header{}
   h.Set("Content-Type", "application/json")
-  auth:="Bearer "+string(token)
-  glog.V(3).Infof("Authorization header: %s",auth)
-  h.Set("Authorization",auth)
-  res, err := http.Get(uri)
+  h.Set("Authorization", "Bearer "+token)
+  s.Header = h
+  glog.V(2).Infof("Headers %+v",h)
+  var params napping.Params
+  params=napping.Params(query_params)
+  p:=params.AsUrlValues()
+  glog.V(2).Infof("Query parameters %+v",p)
+  result:=Result{}
+  resp, err := s.Get(uri, &p, &result, nil)
   if err != nil {
     glog.Fatal(err)
   }
-  body, err := ioutil.ReadAll(res.Body)
-  var data []Resource
-  glog.V(2).Infof("Returned %+v",data)
-  json.Unmarshal(body,&data)
-  return data,err
+  glog.V(3).Infof("Response %+v",resp)
+  glog.V(2).Infof("First resource %+v",result.Resources[0])
+  return result,err
 }
 
 func GetToken(client_id string,secret string,username string,uri string) (string,error)  {

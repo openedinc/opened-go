@@ -17,15 +17,13 @@ func TestSearchResources(t *testing.T) {
   if err!=nil {
     t.Errorf("Error from SearchResources",err)    
   }
-  if len(results)==0 {
-    t.Errorf("No resources returned!")
-  }
+  glog.V(1).Infof("%d results returned",len(results.Resources))
 }
 
 // setup_ws sets up test for OpenEd package calls which use web services (instead of database)
 func setup_ws() (string,error) { 
   flag.Set("alsologtostderr", "true")
-  flag.Set("v","3")
+  flag.Set("v","2")
   token,err:=GetToken("","","","")
   return token,err
 }
@@ -119,7 +117,6 @@ func setup() (*sqlx.DB) {
     glog.Fatalln(err)
   }
   glog.V(2).Infof("Connected to database: %s",db_connect)
-
   return db
 }
 
