@@ -1,6 +1,6 @@
-# opened
+# OpenEd-Go
 --
-    import "github.com/openedinc/opened"
+    import "github.com/openedinc/opened-go"
 
 Package opened provides structures for OpenEd objects such as Resources and Standards
 
