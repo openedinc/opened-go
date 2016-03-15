@@ -14,6 +14,7 @@ import (
   "os"
   "encoding/json"
   "github.com/jmcvetta/napping"
+  "fmt"
 )
 
 type WsResource struct {
@@ -37,6 +38,7 @@ type Resource struct {
   Description      sql.NullString
   Resource_type_id sql.NullInt64
   Youtube_id       sql.NullString
+  Usage_count      sql.NullInt64
 }
 
 type Result struct {
@@ -94,13 +96,12 @@ func GetToken(client_id string,secret string,username string,uri string) (string
   return token,err
 }
 
-
-
 // GetResource fills a Resource structure with the values given the OpenEd resource_id
 func (r *Resource) GetResource(db sqlx.DB) error {
   query := "SELECT Id,Title,Publisher_id,Contribution_id,Description,Resource_type_id,Youtube_id FROM resources WHERE id=" + strconv.Itoa(r.Id) 
   glog.V(3).Infof("Querying with: %s",query)
   err := db.Get(r, query)
+
   if err != nil {
     glog.Errorf("Error retrieving resource: %+v", err)
     return err
@@ -249,9 +250,12 @@ type AssessmentRun struct {
   First_run     bool
 }
 
-func ListAssessmentRuns(db sqlx.DB) ([]AssessmentRun,error) {
+func ListAssessmentRuns(db sqlx.DB,grade int) ([]AssessmentRun,error) {
   // retrieve only users with assessment runs
-  query := "SELECT distinct(id),user_id,finished_at,assessment_id,score,first_run FROM assessment_runs WHERE finished_at is not null and score>0" 
+  query := "SELECT distinct(id),user_id,finished_at,assessment_id,score,first_run FROM assessment_runs INNER JOIN resources ON resource.id=assessment_runs.id WHERE finished_at is not null and score>0" 
+  if grade>=0 {
+    fmt.Sprintf(query,"%s AND ",grade)
+  }
   runs:= []AssessmentRun{}
   err := db.Select(&runs, query)
   if err != nil {

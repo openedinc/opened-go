@@ -8,6 +8,7 @@ import (
   "github.com/jmoiron/sqlx"
 )
 
+// TestSearchResources calls SearchResources with some query parameters and checks if it gets back results
 func TestSearchResources(t *testing.T) {
   token,_:=setup_ws()
   query_params:=make(map[string]string)
@@ -41,7 +42,7 @@ func TestGetToken(t *testing.T) {
 
 func TestListAssessmentRuns(t *testing.T) {
   db:=setup()
-  runs,err:=ListAssessmentRuns(*db)
+  runs,err:=ListAssessmentRuns(*db,-1)
   if err!=nil {
     t.Errorf("Failed to get runs: %+v",err)
   }
