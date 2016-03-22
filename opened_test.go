@@ -8,6 +8,16 @@ import (
   "github.com/jmoiron/sqlx"
 )
 
+func TestListAssessmentRuns(t *testing.T) {
+  db:=setup()
+  runs,err:=ListAssessmentRuns(*db,0)
+  if err!=nil {
+    t.Errorf("Failed to get runs: %+v",err)
+  }
+  glog.V(1).Infof("Got %d runs",len(runs))
+  teardown(db)  
+}
+
 // TestSearchResources calls SearchResources with some query parameters and checks if it gets back results
 func TestSearchResources(t *testing.T) {
   token,_:=setup_ws()
@@ -40,15 +50,6 @@ func TestGetToken(t *testing.T) {
   }
 }
 
-func TestListAssessmentRuns(t *testing.T) {
-  db:=setup()
-  runs,err:=ListAssessmentRuns(*db,-1)
-  if err!=nil {
-    t.Errorf("Failed to get runs: %+v",err)
-  }
-  glog.V(1).Infof("Got %d runs",len(runs))
-  teardown(db)  
-}
 
 func TestListUsers(t *testing.T) {
   db:=setup()
