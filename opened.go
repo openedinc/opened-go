@@ -17,38 +17,38 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// WSREsource is web service result for OpenEd resources (not all attributes in OpenEd).
+// WsResource is web service queryParams for OpenEd resources (not all attributes in OpenEd).
 type WsResource struct {
-	ID               int
-	Title            string
-	URL              string
-	Publisher_id     int
-	Contribution_id  int
-	Description      string
-	Resource_type_id int
-	Youtube_id       string
+	ID             int
+	Title          string
+	URL            string
+	PublisherID    int `json:"publisher_id"`
+	ContributionID int `json:"contribution_id"`
+	Description    string
+	ResourceTypeID int    `json:"resource_type_id"`
+	YoutubeID      string `json:"youtube_id"`
 }
 
 // A Resource has information such as Publisher, Title, Description for video, game or assessment
 type Resource struct {
-	ID               int
-	Title            sql.NullString
-	URL              sql.NullString
-	Publisher_id     sql.NullInt64
-	Contribution_id  sql.NullInt64
-	Description      sql.NullString
-	Resource_type_id sql.NullInt64
-	Youtube_id       sql.NullString
-	Usage_count      sql.NullInt64
+	ID             int
+	Title          sql.NullString
+	URL            sql.NullString
+	PublisherID    sql.NullInt64 `db:"publisher_id"`
+	ContributionID sql.NullInt64 `db:"contribution_id"`
+	Description    sql.NullString
+	ResourceTypeID sql.NullInt64  `db:"resource_type_id"`
+	YoutubeID      sql.NullString `db:"youtube_id"`
+	UsageCount     sql.NullInt64  `db:"usage_count"`
 }
 
-// Result is a list of WSResources.
-type Result struct {
+// ResourceList is a list of WSResources.
+type ResourceList struct {
 	Resources []WsResource
 }
 
-// SearchResources searches OpenEd for resources which map given set of query_params.
-func SearchResources(query_params map[string]string, token string) (Result, error) {
+// SearchResources searches OpenEd for resources given set of queryParams.
+func SearchResources(queryParams map[string]string, token string) (ResourceList, error) {
 	var err error
 	uri := os.Getenv("PARTNER_BASE_URI") + "/1/resources.json"
 	s := napping.Session{}
@@ -58,26 +58,25 @@ func SearchResources(query_params map[string]string, token string) (Result, erro
 	s.Header = h
 	glog.V(2).Infof("Headers %+v", h)
 	var params napping.Params
-	params = napping.Params(query_params)
+	params = napping.Params(queryParams)
 	p := params.AsUrlValues()
 	glog.V(2).Infof("Query parameters %+v", p)
-	result := Result{}
-	resp, err := s.Get(uri, &p, &result, nil)
+	resources := ResourceList{}
+	resp, err := s.Get(uri, &p, &resources, nil)
 	if err != nil {
 		glog.Fatal(err)
 	}
 	glog.V(3).Infof("Response %+v", resp)
-
-	glog.V(2).Infof("First resource %+v", result.Resources[0])
-	return result, err
+	return resources, err
 }
 
-func GetToken(client_id string, secret string, username string, uri string) (string, error) {
+// GetToken given a clientID and secret and username returns a token
+func GetToken(clientID string, secret string, username string, uri string) (string, error) {
 	v := url.Values{}
-	if client_id == "" {
-		client_id = os.Getenv("CLIENT_ID")
+	if clientID == "" {
+		clientID = os.Getenv("CLIENT_ID")
 	}
-	v.Set("client_id", client_id)
+	v.Set("client_id", clientID)
 	if secret == "" {
 		secret = os.Getenv("CLIENT_SECRET")
 	}
@@ -89,7 +88,7 @@ func GetToken(client_id string, secret string, username string, uri string) (str
 	if uri == "" {
 		uri = os.Getenv("PARTNER_BASE_URI") + "/1/oauth/get_token"
 	}
-	glog.V(1).Infof("Getting token for %s", client_id)
+	glog.V(1).Infof("Getting token for %s", clientID)
 	glog.V(1).Infof("To URL %s", uri)
 	resp, err := http.PostForm(uri, v)
 	defer resp.Body.Close()
@@ -101,45 +100,42 @@ func GetToken(client_id string, secret string, username string, uri string) (str
 }
 
 // GetResource fills a Resource structure with the values given the OpenEd resource_id
-func (r *Resource) GetResource(db sqlx.DB) error {
-	query := "SELECT ID,Title,Publisher_id,Contribution_id,Description,Resource_type_id,Youtube_id FROM resources WHERE ID=" + strconv.Itoa(r.Id)
+func (resource *Resource) GetResource(db sqlx.DB) error {
+	query := "SELECT ID,Title,Publisher_id,Contribution_id,Description,Resource_type_id,Youtube_id FROM resources WHERE ID=" + strconv.Itoa(resource.ID)
 	glog.V(3).Infof("Querying with: %s", query)
-	err := db.Get(r, query)
+	err := db.Get(resource, query)
 
 	if err != nil {
 		glog.Errorf("Error retrieving resource: %+v", err)
 		return err
-	} else {
-		glog.V(3).Infof("Resource is: %+v", *r)
 	}
+	glog.V(3).Infof("Resource is: %+v", *resource)
 	return nil
 }
 
 // ResourcesShareStandard tests if a supplied resources shares a standard with the
 // resource used.  Returns true if they share standards
-func (resource1 Resource) ResourcesShareStandard(db sqlx.DB, resource2 Resource) bool {
-	query_base := "SELECT standard_id FROM alignments WHERE resource_id="
-	query1 := query_base + strconv.Itoa(resource1.Id)
+func (resource *Resource) ResourcesShareStandard(db sqlx.DB, resource2 Resource) bool {
+	queryBase := "SELECT standard_id FROM alignments WHERE resource_id="
+	query1 := queryBase + strconv.Itoa(resource.ID)
 	standards1 := []int{}
 	err := db.Select(&standards1, query1)
 	if err != nil {
-		glog.Errorf("Couldn't retrieve standards for %d ", resource1.Id)
+		glog.Errorf("Couldn't retrieve standards for %d ", resource.ID)
 		return false
-	} else {
-		query2 := query_base + strconv.Itoa(resource2.Id)
-		standards2 := []int{}
-		err = db.Select(&standards2, query2)
-		if err != nil {
-			glog.Errorf("Couldn't retrieve standards for %d ", resource2.Id)
-			return false
-		} else {
-			for _, i := range standards1 {
-				for _, x := range standards2 {
-					if i == x {
-						glog.V(2).Infof("Resources %d,%d do share standard %d", resource1.Id, resource2.Id, i)
-						return true
-					}
-				}
+	}
+	query2 := queryBase + strconv.Itoa(resource2.ID)
+	standards2 := []int{}
+	err = db.Select(&standards2, query2)
+	if err != nil {
+		glog.Errorf("Couldn't retrieve standards for %d ", resource2.ID)
+		return false
+	}
+	for _, i := range standards1 {
+		for _, x := range standards2 {
+			if i == x {
+				glog.V(2).Infof("Resources %d,%d do share standard %d", resource.ID, resource2.ID, i)
+				return true
 			}
 		}
 	}
@@ -149,69 +145,67 @@ func (resource1 Resource) ResourcesShareStandard(db sqlx.DB, resource2 Resource)
 
 // ResourcesShareCategory tests if a supplied resources shares a standard category with the
 // resource used.  Returns true if they share category
-func (resource1 Resource) ResourcesShareCategory(db sqlx.DB, resource2 Resource) bool {
-	query_base := "SELECT DISTINCT(category_id) FROM alignments INNER JOIN standards ON standards.id=alignments.standard_id AND resource_id="
-	query1 := query_base + strconv.Itoa(resource1.Id)
+func (resource Resource) ResourcesShareCategory(db sqlx.DB, resource2 Resource) bool {
+	queryBase := "SELECT DISTINCT(category_id) FROM alignments INNER JOIN standards ON standards.ID=alignments.standard_id AND resource_id="
+	query1 := queryBase + strconv.Itoa(resource.ID)
 	categories1 := []int{}
-	glog.V(3).Infof("Querying categories for %d: %s", resource1.Id, query1)
+	glog.V(3).Infof("Querying categories for %d: %s", resource.ID, query1)
 	err := db.Select(&categories1, query1)
 	if err != nil {
-		glog.Errorf("Couldn't retrieve categories for %d:%+v ", resource1.Id, err)
+		glog.Errorf("Couldn't retrieve categories for %d:%+v ", resource.ID, err)
 		return false
-	} else {
-		glog.V(3).Infof("Retrieved categories: %+v", categories1)
-		query2 := query_base + strconv.Itoa(resource2.Id)
-		categories2 := []int{}
-		glog.V(3).Infof("Querying categories for %d: %s", resource2.Id, query2)
-		err = db.Select(&categories2, query2)
-		if err != nil {
-			glog.Errorf("Couldn't retrieve categories for %d ", resource2.Id)
-			return false
-		} else {
-			for _, i := range categories1 {
-				glog.V(3).Infof("First category: %d", i)
-				for _, x := range categories2 {
-					glog.V(3).Infof("Second category: %d", x)
-					if i == x {
-						glog.V(2).Infof("Resources %d,%d share category: %d", resource1.Id, resource2.Id, i)
-						return true
-					}
-				}
+	}
+	glog.V(3).Infof("Retrieved categories: %+v", categories1)
+	query2 := queryBase + strconv.Itoa(resource2.ID)
+	categories2 := []int{}
+	glog.V(3).Infof("Querying categories for %d: %s", resource2.ID, query2)
+	err = db.Select(&categories2, query2)
+	if err != nil {
+		glog.Errorf("Couldn't retrieve categories for %d ", resource2.ID)
+		return false
+	}
+	for _, i := range categories1 {
+		glog.V(3).Infof("First category: %d", i)
+		for _, x := range categories2 {
+			glog.V(3).Infof("Second category: %d", x)
+			if i == x {
+				glog.V(2).Infof("Resources %d,%d share category: %d", resource.ID, resource2.ID, i)
+				return true
 			}
 		}
 	}
+
 	glog.V(3).Infof("Resources do not share category")
 	return false
 }
 
-func (resource1 Resource) ResourcesShareSubject(db sqlx.DB, resource2 Resource) bool {
-	query_base := "SELECT subject_id FROM resources_subjects WHERE resources_subjects.resource_id="
-	query1 := query_base + strconv.Itoa(resource1.Id)
+// ResourcesShareSubject checks if resource that is receiver and second resource share a subject
+func (resource Resource) ResourcesShareSubject(db sqlx.DB, resource2 Resource) bool {
+	queryBase := "SELECT subject_id FROM resources_subjects WHERE resources_subjects.resource_id="
+	query1 := queryBase + strconv.Itoa(resource.ID)
 	subjects1 := []int{}
-	glog.V(3).Infof("Querying subjects for %d: %s", resource1.Id, query1)
+	glog.V(3).Infof("Querying subjects for %d: %s", resource.ID, query1)
 	err := db.Select(&subjects1, query1)
 	if err != nil {
-		glog.Errorf("Couldn't retrieve subjects for %d:%+v ", resource1.Id, err)
+		glog.Errorf("Couldn't retrieve subjects for %d:%+v ", resource.ID, err)
 		return false
-	} else {
-		glog.V(3).Infof("Retrieved subjects: %+v", subjects1)
-		query2 := query_base + strconv.Itoa(resource2.Id)
-		subjects2 := []int{}
-		glog.V(3).Infof("Querying subjects for %d: %s", resource2.Id, query2)
-		err = db.Select(&subjects2, query2)
-		if err != nil {
-			glog.Errorf("Couldn't retrieve categories for %d ", resource2.Id)
-			return false
-		} else {
-			for _, i := range subjects1 {
-				glog.V(3).Infof("First resource subjects: %d", i)
-				for _, x := range subjects2 {
-					glog.V(3).Infof("Second resource subjects: %d", x)
-					if i == x {
-						glog.V(2).Infof("Resources %d,%d share category: %d", resource1.Id, resource2.Id, i)
-						return true
-					}
-				}
+	}
+	glog.V(3).Infof("Retrieved subjects: %+v", subjects1)
+	query2 := queryBase + strconv.Itoa(resource2.ID)
+	subjects2 := []int{}
+	glog.V(3).Infof("Querying subjects for %d: %s", resource2.ID, query2)
+	err = db.Select(&subjects2, query2)
+	if err != nil {
+		glog.Errorf("Couldn't retrieve categories for %d ", resource2.ID)
+		return false
+	}
+	for _, i := range subjects1 {
+		glog.V(3).Infof("First resource subjects: %d", i)
+		for _, x := range subjects2 {
+			glog.V(3).Infof("Second resource subjects: %d", x)
+			if i == x {
+				glog.V(2).Infof("Resources %d,%d share category: %d", resource.ID, resource2.ID, i)
+				return true
 			}
 		}
 	}
@@ -219,73 +213,78 @@ func (resource1 Resource) ResourcesShareSubject(db sqlx.DB, resource2 Resource) 
 	return false
 }
 
+// User is type for OpenEd db user table
 type User struct {
-	Id             sql.NullInt64
-	Email          sql.NullString
-	Username       sql.NullString
-	Role           sql.NullString
-	District_state sql.NullString
-	Provider       sql.NullString
-	Grades_range   sql.NullString
+	ID            sql.NullInt64
+	Email         sql.NullString
+	Username      sql.NullString
+	Role          sql.NullString
+	DistrictState sql.NullString `db:"district_state"`
+	Provider      sql.NullString
+	GradesRange   sql.NullString `db:"grades_range"`
 }
 
 // ListUsers retrieves all users with assessments
 func ListUsers(db sqlx.DB) ([]User, error) {
 	// retrieve only users with assessment runs
-	query := "SELECT distinct(users.id),email,username,role,district_state,provider,grades_range FROM users INNER JOIN assessment_runs ON (users.id=assessment_runs.user_id)"
+	query := "SELECT distinct(users.ID),email,username,role,district_state,provider,grades_range FROM users INNER JOIN assessment_runs ON (users.ID=assessment_runs.user_id)"
 	users := []User{}
 	err := db.Select(&users, query)
 	if err != nil {
-		glog.Errorf("Error retrieving users: %d", err)
+		glog.Errorf("Error retrieving users: %v", err)
 		return nil, err
-	} else {
-		glog.Infof("Retrieved %d users", len(users))
 	}
+	glog.Infof("Retrieved %d users", len(users))
 	return users, err
 }
 
 // An AssessmentRun has selected important information stored in OpenEd AssessmentRuns table.
 type AssessmentRun struct {
-	Id            int
-	User_id       int
-	Finished_at   time.Time
-	Assessment_id int
-	Score         float32
-	First_run     bool
+	ID           int
+	UserID       int       `db:"user_id"`
+	FinishedAt   time.Time `db:"finished_at"`
+	AssessmentID int       `db:"assessment_id"`
+	Score        float32   `db:"score"`
+	FirstRun     bool      `db:"first_run"`
 }
 
+// ListAssessmentRuns shows all assessment runs in database for a given grade
 func ListAssessmentRuns(db sqlx.DB, grade string) ([]AssessmentRun, error) {
 	// retrieve only users with assessment runs
-	query := "SELECT distinct(id),user_id,finished_at,assessment_id,score,first_run FROM assessment_runs INNER JOIN resources ON resources.id=assessment_runs.id WHERE finished_at is not null and score>0 "
+	query := `SELECT distinct(a.id),a.user_id,a.finished_at,a.assessment_id,a.score,a.first_run 
+		FROM assessment_runs a INNER JOIN resources ON resources.ID=a.ID
+		WHERE finished_at is not null and score>0 `
 	if grade != "" {
-		fmt.Sprintf(query, "%s AND min_grade<%d and max_grade>%d", query, grade, grade)
+		if grade == "K" {
+			grade = "0"
+		}
+		query = fmt.Sprintf("%s AND min_grade<=%s and max_grade>=%s", query, grade, grade)
 	}
 	runs := []AssessmentRun{}
 	err := db.Select(&runs, query)
 	if err != nil {
-		glog.Errorf("Error retrieving run: %d", err)
+		glog.Errorf("Error retrieving run: %v", err)
 		return nil, err
-	} else {
-		glog.Infof("Retrieved %d runs", len(runs))
 	}
+	glog.Infof("Retrieved %d runs", len(runs))
 	return runs, err
 }
 
 // An Alignment has information on resource and what standard its aligned to
 type Alignment struct {
-	Id          int
-	Resource_id int
-	Standard_id int
-	Status      int
+	ID         int
+	ResourceID int `db:"resource_id"`
+	StandardID int `db:"standard_id"`
+	Status     int
 }
 
 // GetAlignments retrieves all standard alignments for a given resource
-func (r Resource) GetAlignments(db sqlx.DB) []int {
-	query := "SELECT standard_id FROM alignments WHERE resource_id=" + strconv.Itoa(r.Id)
+func (resource Resource) GetAlignments(db sqlx.DB) []int {
+	query := "SELECT standard_id FROM alignments WHERE resource_id=" + strconv.Itoa(resource.ID)
 	standards := []int{}
 	err := db.Select(&standards, query)
 	if err != nil {
-		glog.Errorf("Error retrieving standards: %d", err)
+		glog.Errorf("Error retrieving standards: %+v", err)
 		return nil
 	}
 	return standards
@@ -293,11 +292,11 @@ func (r Resource) GetAlignments(db sqlx.DB) []int {
 
 // A UserEvent has information on the user and what action they performed.
 type UserEvent struct {
-	Id                 int
-	User_id            int
-	User_event_type_id int
-	Ref_user_id        int
-	Value              string
-	Created_at         time.Time
-	Url                string
+	ID              int
+	UserID          int `db:"user_id"`
+	UserEventTypeID int `db:"user_event_type_id"`
+	RefUserID       int `db:"ref_user_id"`
+	Value           string
+	CreatedAt       time.Time `db:"created_at"`
+	URL             string
 }
