@@ -27,6 +27,8 @@ type WsResource struct {
 	Description    string
 	ResourceTypeID int    `json:"resource_type_id"`
 	YoutubeID      string `json:"youtube_id"`
+	Effectiveness  string `json:"effectiveness"`
+	Subject        string `json:"subject"`
 }
 
 // A Resource has information such as Publisher, Title, Description for video, game or assessment
