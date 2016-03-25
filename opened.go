@@ -300,3 +300,31 @@ type UserEvent struct {
 	CreatedAt       time.Time `db:"created_at"`
 	URL             string
 }
+
+// StandardGroup has the name and count of top level standard groups
+type StandardGroup struct {
+	ID    int
+	Name  string
+	Count int
+}
+
+// ListStandardGroups lists all of the standard groups
+func ListStandardGroups(token string) ([]StandardGroup,error) {
+	// SearchResources searches OpenEd for resources given set of queryParams.
+	var err error
+	result:=[]StandardGroup{}
+	uri := os.Getenv("PARTNER_BASE_URI") + "/1/resources.json"
+	s := napping.Session{}
+	h := &http.Header{}
+	h.Set("Content-Type", "application/json")
+	h.Set("Authorization", "Bearer "+token)
+	s.Header = h
+	glog.V(2).Infof("Headers %+v", h)
+
+	resp, err := s.Get(uri, nil, &result, nil)
+	if err != nil {
+		glog.Fatal(err)
+	}
+	glog.V(3).Infof("Response %+v", resp)
+	return result,err
+}
