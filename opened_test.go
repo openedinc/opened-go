@@ -10,6 +10,16 @@ import (
 	_ "github.com/lib/pq"
 )
 
+
+func TestListStandardGroups(t *testing.T) {
+	token, _ := setupWs()
+	results, err := ListStandardGroups(token)
+	if err != nil {
+		t.Errorf("Error from ListStandardGroups: %+v", err)
+	}
+	glog.V(1).Infof("%d groups returned", len(results.Groups))
+}
+
 func TestListAssessmentRuns(t *testing.T) {
 	db := setup()
 	runs, err := ListAssessmentRuns(*db, "K")

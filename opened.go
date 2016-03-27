@@ -308,23 +308,29 @@ type StandardGroup struct {
 	Count int
 }
 
+// StandardGroupList is structure get back list of standard groups
+type StandardGroupList struct {
+	Groups []StandardGroup
+}
+
 // ListStandardGroups lists all of the standard groups
-func ListStandardGroups(token string) ([]StandardGroup, error) {
+func ListStandardGroups(token string) (StandardGroupList, error) {
 	// SearchResources searches OpenEd for resources given set of queryParams.
 	var err error
-	result := []StandardGroup{}
-	uri := os.Getenv("PARTNER_BASE_URI") + "/1/resources.json"
+	uri := os.Getenv("PARTNER_BASE_URI") + "/1/standard_groups.json"
 	s := napping.Session{}
 	h := &http.Header{}
 	h.Set("Content-Type", "application/json")
 	h.Set("Authorization", "Bearer "+token)
 	s.Header = h
 	glog.V(2).Infof("Headers %+v", h)
-
-	resp, err := s.Get(uri, nil, &result, nil)
+	groups := StandardGroupList{}
+	glog.V(3).Infof("Hitting URI %s", uri)
+	resp, err := s.Get(uri, nil, &groups, nil)
 	if err != nil {
+		glog.V(3).Infof("Error: %+v", err)
 		glog.Fatal(err)
 	}
-	glog.V(3).Infof("Response %+v", resp)
-	return result, err
+	glog.V(3).Infof("Response: %+v", resp)
+	return groups, err
 }
