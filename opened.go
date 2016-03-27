@@ -309,10 +309,10 @@ type StandardGroup struct {
 }
 
 // ListStandardGroups lists all of the standard groups
-func ListStandardGroups(token string) ([]StandardGroup,error) {
+func ListStandardGroups(token string) ([]StandardGroup, error) {
 	// SearchResources searches OpenEd for resources given set of queryParams.
 	var err error
-	result:=[]StandardGroup{}
+	result := []StandardGroup{}
 	uri := os.Getenv("PARTNER_BASE_URI") + "/1/resources.json"
 	s := napping.Session{}
 	h := &http.Header{}
@@ -326,5 +326,5 @@ func ListStandardGroups(token string) ([]StandardGroup,error) {
 		glog.Fatal(err)
 	}
 	glog.V(3).Infof("Response %+v", resp)
-	return result,err
+	return result, err
 }
