@@ -40,6 +40,7 @@ type WsResource struct {
 	Description    string
 	ResourceTypeID int    `json:"resource_type_id"`
 	YoutubeID      string `json:"youtube_id"`
+	UseRightsURL   string `json:"use_rights_url"`
 }
 
 // ResourceList is a list of WSResources.
