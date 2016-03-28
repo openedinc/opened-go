@@ -251,7 +251,7 @@ type AssessmentRun struct {
 }
 
 // ListAssessmentRuns shows all assessment runs in database for a given grade
-func ListAssessmentRuns(db sqlx.DB, grade string) ([]AssessmentRun, error) {
+func ListAssessmentRuns(db sqlx.DB, grade string) []AssessmentRun {
 	// retrieve only users with assessment runs
 	query := `SELECT distinct(a.id),a.user_id,a.finished_at,a.assessment_id,a.score,a.first_run
 		FROM assessment_runs a INNER JOIN resources ON resources.ID=a.ID
@@ -266,10 +266,10 @@ func ListAssessmentRuns(db sqlx.DB, grade string) ([]AssessmentRun, error) {
 	err := db.Select(&runs, query)
 	if err != nil {
 		glog.Errorf("Error retrieving run: %v", err)
-		return nil, err
+		return nil
 	}
 	glog.Infof("Retrieved %d runs", len(runs))
-	return runs, err
+	return runs
 }
 
 // An Alignment has information on resource and what standard its aligned to

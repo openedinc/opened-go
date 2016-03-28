@@ -17,7 +17,7 @@ GetToken given a clientID and secret and username returns a token
 #### func  ListAssessmentRuns
 
 ```go
-func ListAssessmentRuns(db sqlx.DB, grade string) ([]AssessmentRun, error)
+func ListAssessmentRuns(db sqlx.DB, grade string) []AssessmentRun
 ```
 ListAssessmentRuns shows all assessment runs in database for a given grade
 
