@@ -2,8 +2,8 @@
 --
     import "github.com/openedinc/opened-go"
 
-Package opened provides structures for OpenEd objects such as Resources and
-### Standards
+Package opened provides structures for OpenEd objects such as resources and
+standards.
 
 ## Usage
 

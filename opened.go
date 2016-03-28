@@ -1,4 +1,5 @@
-// Package opened provides structures for OpenEd objects such as Resources and Standards
+// Package opened provides structures for OpenEd objects
+//such as resources and standards.
 package opened
 
 import (
