@@ -19,6 +19,16 @@ func TestListStandardGroups(t *testing.T) {
 	glog.V(1).Infof("%d groups returned", len(results.StandardGroups))
 }
 
+func TestListGradeGroups(t *testing.T) {
+	token, _ := setupWs()
+	sgResults, err := ListStandardGroups(token)
+	results, err := ListGradeGroups(sgResults.StandardGroups[0].ID, token)
+	if err != nil {
+		t.Errorf("Error from ListGradeGroups: %+v", err)
+	}
+	glog.V(1).Infof("%d grade groups returned", len(results.GradeGroups))
+}
+
 // TestSearchResources calls SearchResources with some query parameters and checks if it gets back results
 func TestSearchResources(t *testing.T) {
 	token, _ := setupWs()

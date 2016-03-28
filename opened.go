@@ -338,3 +338,45 @@ func ListStandardGroups(token string) (StandardGroupList, error) {
 	glog.V(2).Infof("Groups: %+v", groups)
 	return groups, err
 }
+
+// GradeGroup has info on a grade group such as Elementary
+type GradeGroup struct {
+	ID          int
+	Title       string
+	GradesRange string `json:"grades_range"`
+}
+
+// GradeGroupList is structure get back list of standard groups
+type GradeGroupList struct {
+	GradeGroups []GradeGroup `json:"grade_groups"`
+}
+
+// ListGradeGroups lists all of the standard groups
+func ListGradeGroups(ID int, token string) (GradeGroupList, error) {
+	// SearchResources searches OpenEd for resources given set of queryParams.
+	var err error
+	uri := os.Getenv("PARTNER_BASE_URI") + "/1/grade_groups.json"
+	s := napping.Session{}
+	h := &http.Header{}
+	h.Set("Content-Type", "application/json")
+	h.Set("Authorization", "Bearer "+token)
+	s.Header = h
+	glog.V(2).Infof("Headers %+v", h)
+	groups := GradeGroupList{}
+	glog.V(2).Infof("Hitting URI %s", uri)
+
+	var params napping.Params
+	params = napping.Params{}
+	params["standard_group"] = strconv.Itoa(ID)
+	p := params.AsUrlValues()
+	glog.V(2).Infof("Query parameters %+v", p)
+
+	resp, err := s.Get(uri, &p, &groups, nil)
+	if err != nil {
+		glog.V(2).Infof("Error: %+v", err)
+		glog.Fatal(err)
+	}
+	glog.V(2).Infof("Response: %s", resp.RawText())
+	glog.V(2).Infof("Groups: %+v", groups)
+	return groups, err
+}
