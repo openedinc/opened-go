@@ -311,7 +311,7 @@ type StandardGroup struct {
 
 // StandardGroupList is structure get back list of standard groups
 type StandardGroupList struct {
-	StandardGroups []StandardGroup
+	StandardGroups []StandardGroup `json:"standard_groups"`
 }
 
 // ListStandardGroups lists all of the standard groups
