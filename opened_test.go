@@ -10,24 +10,13 @@ import (
 	_ "github.com/lib/pq"
 )
 
-
 func TestListStandardGroups(t *testing.T) {
 	token, _ := setupWs()
 	results, err := ListStandardGroups(token)
 	if err != nil {
 		t.Errorf("Error from ListStandardGroups: %+v", err)
 	}
-	glog.V(1).Infof("%d groups returned", len(results.Groups))
-}
-
-func TestListAssessmentRuns(t *testing.T) {
-	db := setup()
-	runs, err := ListAssessmentRuns(*db, "K")
-	if err != nil {
-		t.Errorf("Failed to get runs: %+v", err)
-	}
-	glog.V(1).Infof("Got %d runs", len(runs))
-	teardown(db)
+	glog.V(1).Infof("%d groups returned", len(results.StandardGroups))
 }
 
 // TestSearchResources calls SearchResources with some query parameters and checks if it gets back results
@@ -41,12 +30,23 @@ func TestSearchResources(t *testing.T) {
 		t.Errorf("Error from SearchResources: %+v", err)
 	}
 	glog.V(1).Infof("%d results returned", len(results.Resources))
+	glog.V(2).Infof("First result: %+v", results.Resources[0])
+}
+
+func TestListAssessmentRuns(t *testing.T) {
+	db := setup()
+	runs, err := ListAssessmentRuns(*db, "K")
+	if err != nil {
+		t.Errorf("Failed to get runs: %+v", err)
+	}
+	glog.V(1).Infof("Got %d runs", len(runs))
+	teardown(db)
 }
 
 // setup_ws sets up test for OpenEd package calls which use web services (instead of database)
 func setupWs() (string, error) {
 	flag.Set("alsologtostderr", "true")
-	flag.Set("v", "2")
+	flag.Set("v", "3")
 	token, err := GetToken("", "", "", "")
 	return token, err
 }

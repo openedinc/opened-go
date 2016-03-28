@@ -17,18 +17,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// WsResource is web service queryParams for OpenEd resources (not all attributes in OpenEd).
-type WsResource struct {
-	ID             int
-	Title          string
-	URL            string
-	PublisherID    int `json:"publisher_id"`
-	ContributionID int `json:"contribution_id"`
-	Description    string
-	ResourceTypeID int    `json:"resource_type_id"`
-	YoutubeID      string `json:"youtube_id"`
-}
-
 // A Resource has information such as Publisher, Title, Description for video, game or assessment
 type Resource struct {
 	ID             int
@@ -40,6 +28,18 @@ type Resource struct {
 	ResourceTypeID sql.NullInt64  `db:"resource_type_id"`
 	YoutubeID      sql.NullString `db:"youtube_id"`
 	UsageCount     sql.NullInt64  `db:"usage_count"`
+}
+
+// WsResource is web service queryParams for OpenEd resources (not all attributes in OpenEd).
+type WsResource struct {
+	ID             int
+	Title          string
+	URL            string
+	PublisherID    int `json:"publisher_id"`
+	ContributionID int `json:"contribution_id"`
+	Description    string
+	ResourceTypeID int    `json:"resource_type_id"`
+	YoutubeID      string `json:"youtube_id"`
 }
 
 // ResourceList is a list of WSResources.
@@ -66,7 +66,7 @@ func SearchResources(queryParams map[string]string, token string) (ResourceList,
 	if err != nil {
 		glog.Fatal(err)
 	}
-	glog.V(3).Infof("Response %+v", resp)
+	glog.V(2).Infof("Response: %s", resp.RawText())
 	return resources, err
 }
 
@@ -303,14 +303,15 @@ type UserEvent struct {
 
 // StandardGroup has the name and count of top level standard groups
 type StandardGroup struct {
-	ID    int
-	Name  string
-	Count int
+	ID          int
+	Title       string
+	GradesRange string `json:"grades_range"`
+	AreaID      int    `json:"area_id"`
 }
 
 // StandardGroupList is structure get back list of standard groups
 type StandardGroupList struct {
-	Groups []StandardGroup
+	StandardGroups []StandardGroup
 }
 
 // ListStandardGroups lists all of the standard groups
@@ -325,12 +326,14 @@ func ListStandardGroups(token string) (StandardGroupList, error) {
 	s.Header = h
 	glog.V(2).Infof("Headers %+v", h)
 	groups := StandardGroupList{}
-	glog.V(3).Infof("Hitting URI %s", uri)
+	glog.V(2).Infof("Hitting URI %s", uri)
+
 	resp, err := s.Get(uri, nil, &groups, nil)
 	if err != nil {
-		glog.V(3).Infof("Error: %+v", err)
+		glog.V(2).Infof("Error: %+v", err)
 		glog.Fatal(err)
 	}
-	glog.V(3).Infof("Response: %+v", resp)
+	glog.V(2).Infof("Response: %s", resp.RawText())
+	glog.V(2).Infof("Groups: %+v", groups)
 	return groups, err
 }
