@@ -241,3 +241,8 @@ type WsResource struct {
 
 WsResource is web service queryParams for OpenEd resources (not all attributes
 in OpenEd).
+
+### License
+License
+
+This is Free Software, released under the terms of the [GPL v3](http://www.gnu.org/copyleft/gpl.html).
