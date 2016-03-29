@@ -29,6 +29,8 @@ type Resource struct {
 	ResourceTypeID sql.NullInt64  `db:"resource_type_id"`
 	YoutubeID      sql.NullString `db:"youtube_id"`
 	UsageCount     sql.NullInt64  `db:"usage_count"`
+	Effectiveness  string         `json:"effectiveness"`
+	Subject        string         `json:"subject"`
 }
 
 // WsResource is web service queryParams for OpenEd resources (not all attributes in OpenEd).
