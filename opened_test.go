@@ -10,6 +10,15 @@ import (
 	_ "github.com/lib/pq"
 )
 
+func TestListAssessmentRuns(t *testing.T) {
+	db := setup()
+	grade := "K"
+	glog.V(1).Infof("Looking for runs in grade: %s", grade)
+	runs, _ := ListAssessmentRuns(*db, grade)
+	glog.V(1).Infof("Got %d runs", len(runs))
+	teardown(db)
+}
+
 func TestListStandardGroups(t *testing.T) {
 	token, _ := setupWs()
 	results, err := ListStandardGroups(token)
@@ -41,16 +50,6 @@ func TestSearchResources(t *testing.T) {
 	}
 	glog.V(1).Infof("%d results returned", len(results.Resources))
 	glog.V(2).Infof("First result: %+v", results.Resources[0])
-}
-
-func TestListAssessmentRuns(t *testing.T) {
-	db := setup()
-	runs, err := ListAssessmentRuns(*db, "K")
-	if err != nil {
-		t.Errorf("Failed to get runs: %+v", err)
-	}
-	glog.V(1).Infof("Got %d runs", len(runs))
-	teardown(db)
 }
 
 // setup_ws sets up test for OpenEd package calls which use web services (instead of database)
