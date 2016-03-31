@@ -264,6 +264,7 @@ func ListAssessmentRuns(db sqlx.DB, grade string) ([]AssessmentRun, error) {
 		}
 		query = fmt.Sprintf("%s AND min_grade<=%s and max_grade>=%s", query, grade, grade)
 	}
+	glog.V(2).Infof("Query for assessment runs: %s", query)
 	runs := []AssessmentRun{}
 	err := db.Select(&runs, query)
 	if err != nil {
