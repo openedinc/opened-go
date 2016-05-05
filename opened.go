@@ -406,6 +406,10 @@ func DumpResourceRatings() (numRatings int, err error) {
 	var cursor int64
 	var n int
 	var keys []string
+	var content string
+	numRatings = 0
+	content = "Resource,Standard,Rating\n"
+
 	for {
 		cursor, keys, err = c.Scan(cursor, "resource:*", 10).Result()
 		if err != nil {
@@ -415,24 +419,24 @@ func DumpResourceRatings() (numRatings int, err error) {
 		if cursor == 0 {
 			break
 		}
+
+		for _, k := range keys {
+			ratings := c.HGetAllMap(k)
+			fmt.Printf("Resource %s ratings: %+v\n", k, ratings.Val())
+			glog.V(1).Infof("Resource %s ratings: %+v\n", k, ratings.Val())
+			content = content + fmt.Sprintf("%s,%+v\n", k, ratings.Val())
+			numRatings = numRatings + 1
+		}
 	}
 	glog.V(1).Infof("Found %d keys\n", n)
-	var content string
-	numRatings = 0
-	content = "Resource,Standard,Rating\n"
-	for _, k := range keys {
-		ratings := c.HGetAllMap(k)
-		glog.V(2).Infof("Resource %s ratings: %+v\n", k, ratings.Val())
-		content = content + fmt.Sprintf("%s,%+v\n", k, ratings.Val())
-		numRatings = numRatings + 1
-	}
+
 	S3WriteFile("ratings.csv", content)
 	return numRatings, err
 }
 
 // S3WriteFile write specified content to file with filename
 func S3WriteFile(filename string, content string) error {
-	glog.V(2).Infof("Appending to file %s: %s", filename, content)
+	glog.V(2).Infof("Write to file %s: %s", filename, content)
 	svc := s3.New(session.New(), &aws.Config{Region: aws.String("us-east-1")}) // implicit works with AWS_ACCESS__KEY_ID and AWS_SECRET_ACCESS_KEY
 	bucket := os.Getenv("AWS_S3_BUCKET")
 
@@ -441,7 +445,6 @@ func S3WriteFile(filename string, content string) error {
 		Key:    &filename,
 		Body:   bytes.NewReader([]byte(content)),
 	}
-
 	_, putErr := svc.PutObject(&putParams)
 	if putErr == nil {
 		glog.V(2).Infof("Wrote content: %+v", content)
