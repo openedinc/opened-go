@@ -10,6 +10,11 @@ import (
 	_ "github.com/lib/pq"
 )
 
+func TestDumpResourceRatings(t *testing.T) {
+	numRatings, _ := DumpResourceRatings()
+	glog.V(2).Infof("Number of ratings: %d\n", numRatings)
+}
+
 func TestListAssessmentRuns(t *testing.T) {
 	db := setup()
 	grade := "K"

@@ -3,6 +3,7 @@
 package opened
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -13,9 +14,13 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/golang/glog"
 	"github.com/jmcvetta/napping"
 	"github.com/jmoiron/sqlx"
+	goredis "gopkg.in/redis.v3"
 )
 
 // A Resource has information such as Publisher, Title, Description for video, game or assessment
@@ -268,7 +273,7 @@ func ListAssessmentRuns(db sqlx.DB, grade string) ([]AssessmentRun, error) {
 	runs := []AssessmentRun{}
 	err := db.Select(&runs, query)
 	if err != nil {
-		glog.Errorf("Error retrieving run: %v", err)
+		glog.Errorf("Error retrieving run: %+v", err)
 		return nil, err
 	}
 	glog.Infof("Retrieved %d runs", len(runs))
@@ -383,4 +388,65 @@ func ListGradeGroups(ID int, token string) (GradeGroupList, error) {
 	glog.V(2).Infof("Response: %s", resp.RawText())
 	glog.V(2).Infof("Groups: %+v", groups)
 	return groups, err
+}
+
+// DumpResourceRatings writes a file with each resource and its rating for each standard
+func DumpResourceRatings() (numRatings int, err error) {
+	redisConnect := os.Getenv("REDIS_URL")
+	redisURL, _ := url.Parse(redisConnect)
+	redisPassword := ""
+	if redisURL.User != nil {
+		redisPassword, _ = redisURL.User.Password()
+	}
+	redisOptions := goredis.Options{
+		Addr:     redisURL.Host,
+		Password: redisPassword,
+	}
+	c := goredis.NewClient(&redisOptions)
+	var cursor int64
+	var n int
+	var keys []string
+	for {
+		cursor, keys, err = c.Scan(cursor, "resource:*", 10).Result()
+		if err != nil {
+			glog.Fatalf("Scan error: %s", err)
+		}
+		n += len(keys)
+		if cursor == 0 {
+			break
+		}
+	}
+	glog.V(1).Infof("Found %d keys\n", n)
+	var content string
+	numRatings = 0
+	content = "Resource,Standard,Rating\n"
+	for _, k := range keys {
+		ratings := c.HGetAllMap(k)
+		glog.V(2).Infof("Resource %s ratings: %+v\n", k, ratings.Val())
+		content = content + fmt.Sprintf("%s,%+v\n", k, ratings.Val())
+		numRatings = numRatings + 1
+	}
+	S3WriteFile("ratings.csv", content)
+	return numRatings, err
+}
+
+// S3WriteFile write specified content to file with filename
+func S3WriteFile(filename string, content string) error {
+	glog.V(2).Infof("Appending to file %s: %s", filename, content)
+	svc := s3.New(session.New(), &aws.Config{Region: aws.String("us-east-1")}) // implicit works with AWS_ACCESS__KEY_ID and AWS_SECRET_ACCESS_KEY
+	bucket := os.Getenv("AWS_S3_BUCKET")
+
+	putParams := s3.PutObjectInput{
+		Bucket: &bucket,
+		Key:    &filename,
+		Body:   bytes.NewReader([]byte(content)),
+	}
+
+	_, putErr := svc.PutObject(&putParams)
+	if putErr == nil {
+		glog.V(2).Infof("Wrote content: %+v", content)
+	} else {
+		glog.V(2).Infof("Error writing content: %+v", putErr)
+	}
+	return putErr
 }
