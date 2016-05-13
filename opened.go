@@ -446,7 +446,7 @@ func ListGradeGroups(ID int, token string) (GradeGroupList, error) {
 }
 
 // DumpResourceRatings writes a file with each resource and its rating for each standard
-func DumpResourceRatings() (numRatings int, err error) {
+func DumpResourceRatings(db *sqlx.DB) (numRatings int, err error) {
 	redisConnect := os.Getenv("REDIS_URL")
 	redisURL, _ := url.Parse(redisConnect)
 	redisPassword := ""
@@ -479,7 +479,7 @@ func DumpResourceRatings() (numRatings int, err error) {
 			ratings := c.HGetAllMap(k)
 			fmt.Printf("Resource %s ratings: %+v\n", k, ratings.Val())
 			glog.V(1).Infof("Resource %s ratings: %+v\n", k, ratings.Val())
-			id, err := strconv.Atoi(k)
+			id, _ := strconv.Atoi(k)
 			r := Resource{ID: id}
 			rp := &r
 			err = rp.GetResource(*db)
