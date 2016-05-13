@@ -122,6 +122,61 @@ func (resource *Resource) GetResource(db sqlx.DB) error {
 	return nil
 }
 
+// A Standard has fields that describe an educational standard
+/* Standard has CREATE TABLE standards (
+    id integer NOT NULL,
+    identifier character varying(255),
+    "group" character varying(255),
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL,
+    category character varying(255),
+    description text,
+    subcategory text,
+    grade character varying(255),
+    subject character varying(255),
+    number character varying(255),
+    category_id integer,
+    fullname character varying(255),
+    grade_group integer,
+    grade_group_id integer,
+    playlist character varying(255),
+    curated boolean,
+    source character varying(255),
+    title text,
+    modified_at timestamp without time zone,
+    sort_key integer,
+    substandard_num integer,
+    identifier_code character varying(255),
+    key_words text,
+    more_information text,
+    min_grade integer,
+    max_grade integer,
+    parent_id integer,
+    guid character varying(255),
+    confirmed_resources_count integer DEFAULT 0 NOT NULL,
+    prerequisites integer[] DEFAULT '{}'::integer[]
+);*/
+type Standard struct {
+	ID          int
+	Grade       string
+	Title       string
+	Description string
+}
+
+// GetStandard fills in fields in standards structure
+func (standard *Standard) GetStandard(db sqlx.DB) error {
+	var query string
+	query = "SELECT ID,Grade,Title,Description FROM Standards WHERE ID=" + strconv.Itoa(standard.ID)
+	err := db.Get(standard, query)
+
+	if err != nil {
+		glog.Errorf("Error retrieving standards %d: %+v", standard.ID, err)
+		return err
+	}
+	glog.V(3).Infof("Standard is: %+v", *standard)
+	return nil
+}
+
 // ResourcesShareStandard tests if a supplied resources shares a standard with the
 // resource used.  Returns true if they share standards
 func (resource *Resource) ResourcesShareStandard(db sqlx.DB, resource2 Resource) bool {
@@ -424,7 +479,11 @@ func DumpResourceRatings() (numRatings int, err error) {
 			ratings := c.HGetAllMap(k)
 			fmt.Printf("Resource %s ratings: %+v\n", k, ratings.Val())
 			glog.V(1).Infof("Resource %s ratings: %+v\n", k, ratings.Val())
-			content = content + fmt.Sprintf("%s,%+v\n", k, ratings.Val())
+			id, err := strconv.Atoi(k)
+			r := Resource{ID: id}
+			rp := &r
+			err = rp.GetResource(*db)
+			content = content + fmt.Sprintf("%+v,%+v\n", r, ratings.Val())
 			numRatings = numRatings + 1
 		}
 	}
