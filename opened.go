@@ -13,6 +13,7 @@ import (
 	"os"
 	"strconv"
 	"time"
+  "regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -463,7 +464,7 @@ func DumpResourceRatings(db *sqlx.DB) (numRatings int, err error) {
 	var keys []string
 	var content string
 	numRatings = 0
-	content = "Resource,Standard,Rating\n"
+	content = "Resource,Rating\n"
 
 	for {
 		cursor, keys, err = c.Scan(cursor, "resource:*", 10).Result()
@@ -479,7 +480,9 @@ func DumpResourceRatings(db *sqlx.DB) (numRatings int, err error) {
 			ratings := c.HGetAllMap(k)
 			fmt.Printf("Resource %s ratings: %+v\n", k, ratings.Val())
 			glog.V(1).Infof("Resource %s ratings: %+v\n", k, ratings.Val())
-			id, _ := strconv.Atoi(k)
+      resNum, _ := regexp.MatchString("resource:([0-9]+)",k)
+      glog.V(1).Infof("Resource #: %d\n", resNum)
+			id, _ := strconv.Atoi(resNum)
 			r := Resource{ID: id}
 			rp := &r
 			err = rp.GetResource(*db)
