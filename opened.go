@@ -475,12 +475,11 @@ func DumpResourceRatings(db *sqlx.DB) (numRatings int, err error) {
 		if cursor == 0 {
 			break
 		}
-
 		for _, k := range keys {
 			ratings := c.HGetAllMap(k)
 			fmt.Printf("Resource %s ratings: %+v\n", k, ratings.Val())
 			glog.V(1).Infof("Resource %s ratings: %+v\n", k, ratings.Val())
-      re=regexp.Compile("[0-9]+")
+      re:=regexp.Compile("[0-9]+")
       resNum, _ := re.Find(k)
       glog.V(1).Infof("Resource #: %d\n", resNum)
 			id, _ := strconv.Atoi(resNum)
