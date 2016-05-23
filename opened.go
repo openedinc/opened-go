@@ -482,7 +482,7 @@ func DumpResourceRatings(db *sqlx.DB) (numRatings int, err error) {
       re,_ := regexp.Compile("[0-9]+")
       resNum := re.Find([]byte(k))
       glog.V(1).Infof("Resource #: %d\n", resNum)
-			id, _ := strconv.Atoi(resNum)
+			id, _ := strconv.Atoi(string(resNum))
 			r := Resource{ID: id}
 			rp := &r
 			err = rp.GetResource(*db)
