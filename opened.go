@@ -480,7 +480,8 @@ func DumpResourceRatings(db *sqlx.DB) (numRatings int, err error) {
 			fmt.Printf("Resource %s ratings: %+v\n", k, ratings.Val())
 			glog.V(1).Infof("Resource %s ratings: %+v\n", k, ratings.Val())
 			re, _ := regexp.Compile("[0-9]+")
-			resNum := re.Find([]byte(k))
+			resbytes := []byte(k)
+			resNum := re.Find(resbytes)
 			glog.V(1).Infof("Resource #: %d\n", resNum)
 			id, _ := strconv.Atoi(string(resNum))
 			r := Resource{ID: id}
