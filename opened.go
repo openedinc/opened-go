@@ -11,9 +11,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"strconv"
 	"time"
-  "regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -119,7 +119,7 @@ func (resource *Resource) GetResource(db sqlx.DB) error {
 		glog.Errorf("Error retrieving resource %d: %+v", resource.ID, err)
 		return err
 	}
-	glog.V(3).Infof("Resource is: %+v", *resource)
+	glog.V(1).Infof("Resource is: %+v", *resource)
 	return nil
 }
 
@@ -479,9 +479,9 @@ func DumpResourceRatings(db *sqlx.DB) (numRatings int, err error) {
 			ratings := c.HGetAllMap(k)
 			fmt.Printf("Resource %s ratings: %+v\n", k, ratings.Val())
 			glog.V(1).Infof("Resource %s ratings: %+v\n", k, ratings.Val())
-      re,_ := regexp.Compile("[0-9]+")
-      resNum := re.Find([]byte(k))
-      glog.V(1).Infof("Resource #: %d\n", resNum)
+			re, _ := regexp.Compile("[0-9]+")
+			resNum := re.Find([]byte(k))
+			glog.V(1).Infof("Resource #: %d\n", resNum)
 			id, _ := strconv.Atoi(string(resNum))
 			r := Resource{ID: id}
 			rp := &r
