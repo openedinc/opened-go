@@ -472,8 +472,7 @@ func DumpResourceRatings(db *sqlx.DB, grade string) (numRatings int, err error) 
 			glog.Fatalf("Scan error: %s", err)
 		}
 		n += len(keys)
-		if true {
-			//if cursor == 0 {
+		if cursor == 0 {
 			break
 		}
 		for _, k := range keys {
