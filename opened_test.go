@@ -18,6 +18,25 @@ func TestDumpResourceRatings(t *testing.T) {
 	glog.V(2).Infof("Number of ratings: %d\n", numRatings)
 }
 
+func setup() *sqlx.DB {
+	flag.Set("alsologtostderr", "true")
+	flag.Set("v", "3")
+
+	// connect to Postgres to get assessment runs and resource usages
+	dbConnect := os.Getenv("FOLLOWER_DATABASE_URL")
+	db, err := sqlx.Connect("postgres", dbConnect)
+	if err != nil {
+		glog.Fatalln(err)
+	}
+	glog.V(2).Infof("Connected to database: %s", dbConnect)
+	return db
+}
+
+func teardown(db *sqlx.DB) {
+	db.Close()
+}
+
+/*
 func TestListAssessmentRuns(t *testing.T) {
 	db := setup()
 	grade := "K"
@@ -135,21 +154,4 @@ func TestGetResource(t *testing.T) {
 	glog.V(1).Infof("Got resource: %+v", r)
 	teardown(db)
 }
-
-func setup() *sqlx.DB {
-	flag.Set("alsologtostderr", "true")
-	flag.Set("v", "3")
-
-	// connect to Postgres to get assessment runs and resource usages
-	dbConnect := os.Getenv("FOLLOWER_DATABASE_URL")
-	db, err := sqlx.Connect("postgres", dbConnect)
-	if err != nil {
-		glog.Fatalln(err)
-	}
-	glog.V(2).Infof("Connected to database: %s", dbConnect)
-	return db
-}
-
-func teardown(db *sqlx.DB) {
-	db.Close()
-}
+*/
