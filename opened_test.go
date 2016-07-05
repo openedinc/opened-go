@@ -141,7 +141,7 @@ func setup() *sqlx.DB {
 	flag.Set("v", "3")
 
 	// connect to Postgres to get assessment runs and resource usages
-	dbConnect := os.Getenv("DATABASE_URL")
+	dbConnect := os.Getenv("FOLLOWER_DATABASE_URL")
 	db, err := sqlx.Connect("postgres", dbConnect)
 	if err != nil {
 		glog.Fatalln(err)
