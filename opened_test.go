@@ -11,7 +11,10 @@ import (
 )
 
 func TestDumpResourceRatings(t *testing.T) {
-	numRatings, _ := DumpResourceRatings()
+	db := setup()
+	grade := "K"
+	numRatings, _ := DumpResourceRatings(db, grade)
+	teardown(db)
 	glog.V(2).Infof("Number of ratings: %d\n", numRatings)
 }
 
