@@ -447,7 +447,7 @@ func ListGradeGroups(ID int, token string) (GradeGroupList, error) {
 }
 
 // DumpResourceRatings writes a file with each resource and its rating for each standard
-func DumpResourceRatings(db *sqlx.DB) (numRatings int, err error) {
+func DumpResourceRatings(db *sqlx.DB, grade string) (numRatings int, err error) {
 	redisConnect := os.Getenv("REDIS_URL")
 	redisURL, _ := url.Parse(redisConnect)
 	redisPassword := ""
@@ -492,8 +492,8 @@ func DumpResourceRatings(db *sqlx.DB) (numRatings int, err error) {
 		}
 	}
 	glog.V(1).Infof("Found %d keys\n", n)
-
-	S3WriteFile("ratings.csv", content)
+	filename := grade + "ratings.csv"
+	S3WriteFile(filename, content)
 	return numRatings, err
 }
 
