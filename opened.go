@@ -492,7 +492,7 @@ func DumpResourceRatings(db *sqlx.DB, grade string) (numRatings int, err error) 
 		}
 	}
 	glog.V(1).Infof("Found %d keys\n", n)
-	filename := grade + "ratings.csv"
+	filename := fmt.Sprintf("%s-%s", grade, "ratings.csv")
 	S3WriteFile(filename, content)
 	return numRatings, err
 }
