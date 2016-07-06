@@ -487,7 +487,16 @@ func DumpResourceRatings(db *sqlx.DB, grade string) (numRatings int, err error) 
 			r := Resource{ID: id}
 			rp := &r
 			err = rp.GetResource(*db)
-			content = content + fmt.Sprintf("%+v,%+v\n", r, ratings.Val())
+
+			content = content + fmt.Sprintf("%s,", r.URL.String)
+			for stdID, rating := range ratings.Val() {
+				ID, _ := strconv.Atoi(stdID)
+				s := Standard{ID: ID}
+				sp := &s
+				err = sp.GetStandard(*db)
+				content = content + fmt.Sprintf("%s,%s,", s.Title, rating)
+			}
+			content = content + "\n"
 			numRatings = numRatings + 1
 		}
 	}
