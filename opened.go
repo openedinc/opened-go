@@ -28,7 +28,7 @@ import (
 type Resource struct {
 	ID             int
 	Title          sql.NullString
-	URL            sql.NullString `db:"share_url"
+	URL            sql.NullString `db:"share_url"`
 	PublisherID    sql.NullInt64 `db:"publisher_id"`
 	ContributionID sql.NullInt64 `db:"contribution_id"`
 	Description    sql.NullString
