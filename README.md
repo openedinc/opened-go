@@ -12,8 +12,7 @@ standards.
 ```go
 func GetToken(clientID string, secret string, username string, uri string) (string, error)
 ```
-GetToken given a clientID and secret and username returns a token
-
+GetToken given a clientID and secret and username returns a token.  (Note the token must be prepended with a bearer + in the header.)
 #### func  ListAssessmentRuns
 
 ```go
